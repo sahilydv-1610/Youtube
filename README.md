@@ -1,6 +1,4 @@
 Alright — let’s turn your README into a **premium, recruiter-level, GitHub-winning asset** 🚀
-This version includes **badges, deployment, visuals, and pro structure**. Copy-paste ready.
-
 ---
 
 ## 🚀 Live Demo
