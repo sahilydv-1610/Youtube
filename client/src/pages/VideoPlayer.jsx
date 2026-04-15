@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import axios from "axios";
+import API from "../api";
 import { Loader } from "../components/Loader";
 import {
   ThumbsUp, ThumbsDown, Share, Download,
@@ -72,16 +72,16 @@ const VideoPlayer = () => {
     const load = async () => {
       try {
         setLoading(true);
-        const vidRes = await axios.get(`http://localhost:5001/api/video/${id}`);
+        const vidRes = await API.get(`/api/video/${id}`);
         setVideo(vidRes.data);
 
         // Fetch related/recommended videos (topic + same channel)
         try {
-          const relRes = await axios.get(`http://localhost:5001/api/related/${id}`);
+          const relRes = await API.get(`/api/related/${id}`);
           setSuggestedVideos(relRes.data.slice(0, 15));
         } catch {
           // Fallback to trending if related fails
-          const trendRes = await axios.get(`http://localhost:5001/api/trending`);
+          const trendRes = await API.get(`/api/trending`);
           setSuggestedVideos(trendRes.data.filter((v) => v.videoId !== id).slice(0, 15));
         }
 
@@ -90,7 +90,7 @@ const VideoPlayer = () => {
         localStorage.setItem("recentVideos", JSON.stringify([vidRes.data, ...filtered].slice(0, 10)));
 
         try {
-          const commRes = await axios.get(`http://localhost:5001/api/comments/${id}`);
+          const commRes = await API.get(`/api/comments/${id}`);
           setComments(commRes.data);
         } catch { setComments([]); }
       } catch (err) {

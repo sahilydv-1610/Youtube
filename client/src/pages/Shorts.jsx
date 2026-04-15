@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import axios from "axios";
+import API from "../api";
 import { Loader } from "../components/Loader";
 import { useTheme } from "../context/ThemeContext";
 import { motion } from "framer-motion";
@@ -174,7 +174,7 @@ const Shorts = () => {
   // Fetch a batch of shorts
   const fetchBatch = useCallback(async () => {
     try {
-      const res = await axios.get(`http://localhost:5001/api/shorts/random`);
+      const res = await API.get(`/api/shorts/random`);
       const skipped = new Set(getSkipped());
       const newVideos = res.data.filter(
         (v) => !seenIdsRef.current.has(v.videoId) && !skipped.has(v.videoId)
@@ -204,7 +204,7 @@ const Shorts = () => {
       // If we have an initialId, try to fetch it specifically or ensure it's in the list
       if (initialId) {
         try {
-          const res = await axios.get(`http://localhost:5001/api/video/${initialId}`);
+          const res = await API.get(`/api/video/${initialId}`);
           if (res.data) {
             batch = [res.data, ...batch.filter(v => v.videoId !== initialId)];
             seenIdsRef.current.add(initialId);
@@ -241,7 +241,7 @@ const Shorts = () => {
     fetchingRef.current = true;
     try {
       const kw = video.title.split(/[\s\-|:]+/).slice(0, 3).join(" ");
-      const res = await axios.get(`http://localhost:5001/api/search?q=${encodeURIComponent(kw + " shorts")}`);
+      const res = await API.get(`/api/search?q=${encodeURIComponent(kw + " shorts")}`);
       const skipped = new Set(getSkipped());
       const fresh = res.data.filter(
         (v) => !seenIdsRef.current.has(v.videoId) && !skipped.has(v.videoId)

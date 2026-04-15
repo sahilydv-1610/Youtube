@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import axios from "axios";
+import API from "../api";
 import VideoCard from "../components/VideoCard";
 import { SkeletonGrid } from "../components/Loader";
 import { motion, AnimatePresence } from "framer-motion";
@@ -20,9 +20,9 @@ const Home = () => {
       try {
         setLoading(true);
         const endpoint = activeCategory === "All"
-          ? "http://localhost:5001/api/home/recommended"
-          : `http://localhost:5001/api/search?q=${encodeURIComponent(activeCategory)}`;
-        const res = await axios.get(endpoint);
+          ? "/api/home/recommended"
+          : `/api/search?q=${encodeURIComponent(activeCategory)}`;
+        const res = await API.get(endpoint);
         setVideos(res.data);
       } catch (err) { setError("Failed to load videos."); }
       finally { setLoading(false); }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams, Link } from "react-router-dom";
-import axios from "axios";
+import API from "../api";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "../context/ThemeContext";
 
@@ -45,7 +45,7 @@ const Search = () => {
       if (!query) return;
       try {
         setLoading(true);
-        const res = await axios.get(`http://localhost:5001/api/search?q=${encodeURIComponent(query)}`);
+        const res = await API.get(`/api/search?q=${encodeURIComponent(query)}`);
         setResults(res.data);
       } catch (err) {
         console.error(err);

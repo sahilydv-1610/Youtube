@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import axios from "axios";
+import API from "../api";
 import { Loader } from "../components/Loader";
 import VideoCard from "../components/VideoCard";
 import { motion, AnimatePresence } from "framer-motion";
@@ -25,8 +25,8 @@ const Channel = () => {
       try {
         setLoading(true);
         const [chRes, vidRes] = await Promise.all([
-          axios.get(`http://localhost:5001/api/channel/${channelId}`),
-          axios.get(`http://localhost:5001/api/channel/${channelId}/videos`),
+          API.get(`/api/channel/${channelId}`),
+          API.get(`/api/channel/${channelId}/videos`),
         ]);
         setChannel(chRes.data);
         setVideos(vidRes.data);
