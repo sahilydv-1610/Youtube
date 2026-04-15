@@ -35,7 +35,7 @@ const Navbar = ({ toggleSidebar }) => {
           <div className="rounded-lg p-1" style={{ backgroundColor: theme.accentRed }}>
             <Play size={16} className="text-white" fill="white" />
           </div>
-          <span className="text-[17px] font-bold tracking-tight hidden sm:block" style={{ color: theme.text }}>YouTube</span>
+          <span className="text-[17px] font-bold tracking-tight hidden sm:block" style={{ color: theme.text }}>PlayTube</span>
         </Link>
       </div>
 
