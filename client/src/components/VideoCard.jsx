@@ -41,9 +41,18 @@ const VideoCard = ({ video }) => {
       </div>
       <div className="flex gap-3 mt-3 px-0.5">
         <Link to={channelId ? `/channel/${channelId}` : "#"} onClick={(e) => e.stopPropagation()} className="flex-shrink-0">
-          <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold"
+          <div className="w-9 h-9 rounded-full overflow-hidden flex items-center justify-center text-sm font-semibold relative"
             style={{ backgroundColor: theme.bgElevated, color: theme.text }}>
-            {channelName?.charAt(0).toUpperCase()}
+            {video.channelAvatar ? (
+              <img 
+                src={video.channelAvatar} 
+                alt={channelName} 
+                className="w-full h-full object-cover"
+                onError={(e) => { e.target.style.display = 'none'; }}
+              />
+            ) : (
+              <span>{channelName?.charAt(0).toUpperCase()}</span>
+            )}
           </div>
         </Link>
         <div className="flex flex-col min-w-0">

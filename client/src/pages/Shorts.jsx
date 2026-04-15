@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { Loader } from "../components/Loader";
 import { useTheme } from "../context/ThemeContext";
@@ -32,13 +33,44 @@ function getTimeAgo(d) {
 
 // Rotating search queries for infinite content
 const QUERIES = [
-  "shorts viral trending", "funny shorts", "amazing shorts", "satisfying shorts",
-  "shorts comedy", "shorts music", "shorts gaming", "shorts sports",
-  "shorts dance", "shorts cooking", "shorts animals", "shorts diy",
-  "shorts facts", "shorts science", "shorts travel", "shorts fitness",
+  "shorts trending india", "funny hindi shorts", "amazing indian facts", "satisfying shorts",
+  "bb ki vines shorts", "carryminati shorts", "tech shorts hindi", "indian food shorts",
+  "bollywood dance shorts", "cricket shorts india", "vlogs hindi shorts", "diy hindi",
+  "ias motivation shorts", "science facts hindi", "travel india shorts", "fitness hindi",
 ];
 
-/* ── Single Short ── */
+/* ── Single Short (Placeholder for performance) ── */
+const ShortPlaceholder = ({ video, theme }) => {
+  const viewsFmt = video.viewCount
+    ? new Intl.NumberFormat("en-US", { notation: "compact" }).format(video.viewCount) : "0";
+
+  return (
+    <div className="relative w-full h-full flex items-center justify-center bg-black">
+      <div className="relative h-full w-full max-w-[370px] rounded-xl overflow-hidden shadow-2xl">
+        {/* Static Thumbnail instead of heavy iframe */}
+        <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover blur-[2px] opacity-60" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-md">
+            <div className="w-4 h-4 rounded-full bg-white animate-pulse" />
+          </div>
+        </div>
+        
+        {/* Standard Overlays (UI remains interactive) */}
+        <div className="absolute bottom-0 left-0 right-[52px] p-3 pointer-events-none"
+          style={{ background: "linear-gradient(transparent, rgba(0,0,0,0.9))" }}>
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-7 h-7 rounded-full overflow-hidden bg-white/15" />
+            <div className="h-4 w-24 bg-white/20 rounded truncate" />
+          </div>
+          <div className="h-4 w-full bg-white/20 rounded mb-1" />
+          <div className="h-3 w-32 bg-white/10 rounded" />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ── Single Short (Full Player) ── */
 const ShortCard = ({ video, isActive, theme, onWatched }) => {
   const [liked, setLiked] = useState(false);
   const [disliked, setDisliked] = useState(false);
@@ -69,10 +101,10 @@ const ShortCard = ({ video, isActive, theme, onWatched }) => {
         <iframe
           className="absolute inset-0 w-full h-full"
           src={isActive
-            ? `https://www.youtube.com/embed/${video.videoId}?autoplay=1&loop=1&playlist=${video.videoId}&controls=1&modestbranding=1&rel=0&playsinline=1`
+            ? `https://www.youtube.com/embed/${video.videoId}?autoplay=1&mute=1&loop=1&playlist=${video.videoId}&controls=1&modestbranding=1&rel=0&playsinline=1`
             : `https://www.youtube.com/embed/${video.videoId}?modestbranding=1&rel=0`}
           title={video.title} frameBorder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           allowFullScreen
         />
 
@@ -80,8 +112,12 @@ const ShortCard = ({ video, isActive, theme, onWatched }) => {
         <div className="absolute bottom-0 left-0 right-[52px] p-3 pointer-events-none"
           style={{ background: "linear-gradient(transparent, rgba(0,0,0,0.9))" }}>
           <div className="flex items-center gap-2 mb-1 pointer-events-auto">
-            <div className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold text-white bg-white/15">
-              {video.channelName?.charAt(0).toUpperCase()}
+            <div className="w-7 h-7 rounded-full overflow-hidden flex items-center justify-center text-[11px] font-bold text-white bg-white/15">
+              {video.channelAvatar ? (
+                <img src={video.channelAvatar} alt={video.channelName} className="w-full h-full object-cover" />
+              ) : (
+                video.channelName?.charAt(0).toUpperCase()
+              )}
             </div>
             <span className="text-[13px] font-semibold text-white truncate">{video.channelName}</span>
             <motion.button whileTap={{ scale: 0.9 }}
@@ -125,18 +161,20 @@ const ShortCard = ({ video, isActive, theme, onWatched }) => {
 /* ── Shorts Page ── */
 const Shorts = () => {
   const { theme } = useTheme();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialId = searchParams.get("id");
+
   const [shorts, setShorts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
   const containerRef = useRef(null);
   const fetchingRef = useRef(false);
-  const queryIndexRef = useRef(0);
   const seenIdsRef = useRef(new Set());
 
   // Fetch a batch of shorts
-  const fetchBatch = useCallback(async (query) => {
+  const fetchBatch = useCallback(async () => {
     try {
-      const res = await axios.get(`http://localhost:5001/api/search?q=${encodeURIComponent(query)}`);
+      const res = await axios.get(`http://localhost:5001/api/shorts/random`);
       const skipped = new Set(getSkipped());
       const newVideos = res.data.filter(
         (v) => !seenIdsRef.current.has(v.videoId) && !skipped.has(v.videoId)
@@ -150,9 +188,7 @@ const Shorts = () => {
   const loadMore = useCallback(async () => {
     if (fetchingRef.current) return;
     fetchingRef.current = true;
-    const q = QUERIES[queryIndexRef.current % QUERIES.length];
-    queryIndexRef.current++;
-    const batch = await fetchBatch(q);
+    const batch = await fetchBatch();
     if (batch.length > 0) {
       setShorts((prev) => [...prev, ...batch]);
     }
@@ -163,14 +199,34 @@ const Shorts = () => {
   useEffect(() => {
     const init = async () => {
       setLoading(true);
-      const batch = await fetchBatch(QUERIES[0]);
-      queryIndexRef.current = 1;
-      batch.forEach((v) => seenIdsRef.current.add(v.videoId));
+      let batch = await fetchBatch();
+      
+      // If we have an initialId, try to fetch it specifically or ensure it's in the list
+      if (initialId) {
+        try {
+          const res = await axios.get(`http://localhost:5001/api/video/${initialId}`);
+          if (res.data) {
+            batch = [res.data, ...batch.filter(v => v.videoId !== initialId)];
+            seenIdsRef.current.add(initialId);
+          }
+        } catch {}
+      }
+      
       setShorts(batch);
       setLoading(false);
     };
     init();
-  }, [fetchBatch]);
+  }, [fetchBatch, initialId]);
+
+  // Sync index to URL
+  useEffect(() => {
+    if (shorts.length > 0 && shorts[activeIndex]) {
+      const currentId = shorts[activeIndex].videoId;
+      if (currentId !== searchParams.get("id")) {
+        setSearchParams({ id: currentId }, { replace: true });
+      }
+    }
+  }, [activeIndex, shorts, setSearchParams, searchParams]);
 
   // Auto-load more when user nears the end
   useEffect(() => {
@@ -211,10 +267,25 @@ const Shorts = () => {
 
   if (loading) return <div className="flex items-center justify-center h-full"><Loader /></div>;
 
+  if (shorts.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-center p-6" style={{ color: theme.textSecondary }}>
+        <p className="text-xl font-medium mb-4">No Shorts found in your region</p>
+        <p className="text-sm mb-6 opacity-70">We couldn't fetch any trending shorts right now. This might be due to API limits or connection issues.</p>
+        <button 
+          onClick={() => window.location.reload()}
+          className="px-6 py-2 rounded-full font-medium transition-transform active:scale-95"
+          style={{ backgroundColor: theme.text, color: theme.bg }}>
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="relative w-full h-full flex items-center justify-center overflow-hidden"
       style={{ backgroundColor: theme.mode === "dark" ? "#000" : "#f2f2f2" }}>
-
+      
       {/* Up / Down buttons */}
       <div className="absolute right-5 bottom-6 z-30 flex flex-col gap-2">
         <motion.button whileTap={{ scale: 0.9 }} onClick={() => scrollTo(activeIndex - 1)}
@@ -231,16 +302,41 @@ const Shorts = () => {
       </div>
 
       {/* Scroll container */}
-      <div ref={containerRef} onScroll={handleScroll}
-        className="w-full h-full overflow-y-scroll hide-scrollbar flex flex-col items-center"
-        style={{ scrollSnapType: "y mandatory" }}>
-        {shorts.map((video, idx) => (
-          <div key={video.videoId || idx}
-            className="w-full flex-shrink-0 flex items-center justify-center"
-            style={{ height: "100%", scrollSnapAlign: "start" }}>
-            <ShortCard video={video} isActive={idx === activeIndex} theme={theme} onWatched={handleWatched} />
-          </div>
-        ))}
+      <div 
+        ref={containerRef} 
+        onScroll={handleScroll}
+        className="w-full h-screen overflow-y-auto hide-scrollbar"
+        style={{ 
+          scrollSnapType: "y mandatory", 
+          overscrollBehaviorY: "contain", 
+          touchAction: "pan-y",
+          display: "block",
+          position: "relative"
+        }}>
+        {shorts.map((video, idx) => {
+          // Keep a wider buffer of 7 videos for stability
+          const isInBuffer = idx >= activeIndex - 3 && idx <= activeIndex + 4;
+
+          return (
+            <div key={video.videoId || `s-${idx}`}
+              className="w-full h-screen flex-shrink-0"
+              style={{ 
+                scrollSnapAlign: "start", 
+                scrollSnapStop: "always",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center"
+              }}>
+              {isInBuffer ? (
+                <ShortCard video={video} isActive={idx === activeIndex} theme={theme} onWatched={handleWatched} />
+              ) : (
+                <ShortPlaceholder video={video} theme={theme} />
+              )}
+            </div>
+          );
+        })}
+        {/* Intersection marker for load extra data */}
+        <div className="h-2 w-full" />
       </div>
     </div>
   );
