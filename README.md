@@ -1,6 +1,3 @@
-Alright — let’s turn your README into a **premium, recruiter-level, GitHub-winning asset** 🚀
----
-
 ## 🚀 Live Demo
 
 🌐 **Frontend (Vercel):** [https://your-frontend-link.vercel.app](https://youtube-clone-4chr.onrender.com/)
