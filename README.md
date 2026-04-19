@@ -12,6 +12,7 @@ A modern **YouTube Clone** built with a scalable architecture using **React + No
 This app replicates core YouTube features like:
 
 * Video browsing
+* Video Downloading
 * Search functionality
 * Video playback
 
